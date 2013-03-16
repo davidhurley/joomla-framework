@@ -187,10 +187,10 @@ example shows you how to do this on a daily basis.
 
 ```php
 use Joomla\Log
-use Joomla\Date\Date
+use Joomla\Factory
 
 // Get the date.
-$date = Date::getDate()->format('Y-m-d');
+$date = Factory::getDate()->format('Y-m-d');
 
 // Add the logger.
 Log::addLogger(
