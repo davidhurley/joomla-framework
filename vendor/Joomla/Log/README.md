@@ -5,11 +5,11 @@
 The Joomla Platform includes a Log package that allows for configurable,
 hook-driven logging to a variety of formats.
 
-The classes included in the Log package are `JLog`, `JLogEntry`,
-`JLogger` as well as the classes `JLoggerDatabase`,
-`JLoggerEcho`, `JLoggerFormattedText`, `JLoggerMessageQueue`, `JLoggerSyslog`
-and `JLoggerW3C` which support formatting and storage. Of all these
-classes, you will generally only use `JLog` in your projects.
+The classes included in the Log package are `Log`, `Log\Entry`,
+`Log\Logger` as well as the classes `Log\Logger\Database`,
+`Log\Logger\Echoo`, `Log\Logger\Formattedtext`, `Log\Logger\Syslog`
+and `Log\Logger\W3c` which support formatting and storage. Of all these
+classes, you will generally only use `Log` in your projects.
 
 Logging is a two-step process.
 
@@ -17,36 +17,36 @@ First you must add the add loggers to listen for log messages. Any
 number of loggers can be configured to listen for log messages based on
 a priority and a category. For example, you can configure all log
 messages to be logged to the database, but also set just errors to be
-logged to a file. To do this, you use the `JLog::addLogger` method.
+logged to a file. To do this, you use the `Log::addLogger` method.
 
 After at least one logger is configured, you can then add messages using
-the `JLog::addLogEntry` method where you can specify a message, and
+the `Log::addLogEntry` method where you can specify a message, and
 optionally a priority (integer), category (string) and date.
 
 ### Logging priority
 
 Before we look at any logging examples, we need to understand what the
 priority is. The priority is an integer mask and is set using one or
-more predefined constants in the `JLog` class. These are:
+more predefined constants in the `Log` class. These are:
 
-* JLog::EMERGENCY
-* JLog::ALERT
-* JLog::CRITICAL
-* JLog::ERROR
-* JLog::WARNING
-* JLog::NOTICE
-* JLog::INFO
-* JLog::DEBUG
+* Log::EMERGENCY
+* Log::ALERT
+* Log::CRITICAL
+* Log::ERROR
+* Log::WARNING
+* Log::NOTICE
+* Log::INFO
+* Log::DEBUG
 
-A final constant, `JLog::ALL` is also available which corresponds to hex
+A final constant, `Log::ALL` is also available which corresponds to hex
 FFFF (16 bits). The other constants reserve the first eight bits for
 system use. This allows the developer the last eight bits, hex 100 to
 8000, for custom use if desired. As the values are for masking, they can
 be mixed using any of the bitwise operators for *and*, *or*, *not* and
 *xor*.
 
-By default, loggers are added to listen for `JLog::ALL` priorities and log
-entries are added using the `JLog::INFO` mask.
+By default, loggers are added to listen for `Log::ALL` priorities and log
+entries are added using the `Log::INFO` mask.
 
 ### Logging to files *(formattedtext)*
 
@@ -55,14 +55,15 @@ this is the default handler for logging. To do this add the
 logger and then you can add log messages.
 
 ```php
+use Joomla\Log
 // Initialise a basic logger with no options (once only).
-JLog::addLogger(array());
+Log::addLogger(array());
 
 // Add a message.
-JLog::add('Logged');
+Log::add('Logged');
 ```
 
-As no logger has been specified in the `JLog::addLogger` call, the
+As no logger has been specified in the `Log::addLogger` call, the
 "formattedtext" logger will be used. This will log the message to a file
 called "error.php" in the log folder specified by the "log_path"
 configuration variable (in the Joomla CMS, the default is `/logs/`). It
@@ -82,7 +83,7 @@ message. The category is empty (a dash) because we didn't supply it.
 To log a different priority, you can use code like:
 
 ```php
-JLog::add('Logged 3', JLog::WARNING, 'Test');
+Log::add('Logged 3', Log::WARNING, 'Test');
 ```
 
 The log file will now look similar to the following:
@@ -94,7 +95,7 @@ The log file will now look similar to the following:
 #### Additional options with formattedtext
 
 When adding the "formattedtext" logger, the following options are
-available to supply in the array you pass to `JLog::addLogger`.
+available to supply in the array you pass to `Log::addLogger`.
 
 Option              | Description
 ------------------- | ----------------
@@ -110,8 +111,9 @@ name of the file to which you are logging when you add the logger, like
 this:
 
 ```php
+use Joomla\Log
 // Log to a specific text file.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'mylogs.php'
 	)
@@ -126,20 +128,22 @@ For example, the following code will log all messages except errors to
 one file, and error messages to a separate file.
 
 ```php
+use Joomla\Log
+
 // Log all message except errors to mylogs.php.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'mylogs.php'
 	),
-	JLog::ALL ^ JLog::ERROR
+	Log::ALL ^ Log::ERROR
 );
 
 // Log errors to myerrors.php.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'myerrors.php'
 	),
-	JLog::ERROR
+	Log::ERROR
 );
 ```
 
@@ -151,12 +155,14 @@ example, the following code could be used in a Joomla extension to just
 collect errors relating to it.
 
 ```php
+use Joomla\Log
+
 // Log my extension errors only.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'com_hello.errors.php'
 	),
-	JLog::ERROR,
+	Log::ERROR,
 	'com_hello'
 );
 ```
@@ -165,7 +171,7 @@ To log messages to that logger, you would use something similar to the
 following code:
 
 ```php
-JLog::add('Forgot to say goodbye', JLog::ERROR, 'com_hello');
+Log::add('Forgot to say goodbye', Log::ERROR, 'com_hello');
 ```
 
 It is important to note that other loggers, added beyond your control,
@@ -180,11 +186,14 @@ need to add the date to the file name of the log file. The following
 example shows you how to do this on a daily basis.
 
 ```php
+use Joomla\Log
+use Joomla\Date\Date
+
 // Get the date.
-$date = JFactory::getDate()->format('Y-m-d');
+$date = Date::getDate()->format('Y-m-d');
 
 // Add the logger.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'com_hello.'.$date.'.php'
 	)
@@ -213,8 +222,10 @@ To modify for the log format to add any or all of these fields, you can
 add the logger as shown in the following code.
 
 ```php
+use Joomla\Log
+
 // Add the logger.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'com_hello.php',
 		'text_entry_format' => '{DATE} {TIME} {CLIENTIP} {CATEGORY} {MESSAGE}' 
@@ -226,25 +237,27 @@ As you can see, you can include or leave out any fields as you require
 to suit the needs of your project.
 
 You can also add more fields but to do this you need to create and add a
-`JLogEntry` object directly. The following example shows you how to do
+`LogEntry` object directly. The following example shows you how to do
 this.
 
 ```php
+use Joomla\Log
+
 // Add the logger.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'text_file' => 'com_shop.sales.php',
 		'text_entry_format' => '{DATETIME} {PRICE} {QUANTITY} {MESSAGE}'
 	),
-	JLog::INFO,
+	Log::INFO,
 	'Shop'
 );
 
-$logEntry = new JLogEntry('T- Shirt', JLog::INFO, 'Shop');
+$logEntry = new LogEntry('T- Shirt', Log::INFO, 'Shop');
 $logEntry->price = '7.99';
 $logEntry->quantity = 10;
 
-JLog::add($logEntry);
+Log::add($logEntry);
 ```
 
 It is strongly recommended that, when using a custom format, you bind
@@ -270,17 +283,19 @@ To log messages using the "database" logger, you the following code as a
 guide.
 
 ```php
+use Joomla\Log
+
 // Add the logger.
-JLog::addLogger(
+Log::addLogger(
 	array(
 		'logger' => 'database'
 	),
-	JLog::ALL,
+	Log::ALL,
 	'dblog'
 );
 
 // Add the message.
-JLog::add('Database log', JLog::INFO, 'dblog');
+Log::add('Database log', Log::INFO, 'dblog');
 ```
 
 Notice that the example binds the logger to all message priorities, but
@@ -290,8 +305,11 @@ If you are wanting to store additional information in the message, you
 can do so using a JSON encoded string. For example:
 
 ```php
+use Joomla\Log
+use Joomla\Uri\Uri
+
 // Assemble the log message.
-$user = JFactory::getUser();
+$user = Uri::getUser();
 $log = array(
 	'userId' => $user->get('id'),
 	'userName' => $user->get('name'),
@@ -301,7 +319,7 @@ $log = array(
 );
 
 // Add the message.
-JLog::add(json_encode($log), JLog::INFO, 'dblog');
+Log::add(json_encode($log), Log::INFO, 'dblog');
 ```
 
 This makes it possible to retrieve detailed information for display.
